@@ -1,1 +1,116 @@
-issue,subject,company,response,product_area,status,request_type,justification
+status,product_area,response,justification,request_type
+replied,identity_management_sso_jit_scim,"Hi,
+
+#### I lost Admin/Owner access after enabling group mappings",High confidence match in corpus.,product_issue
+replied,integrations_applicant_tracking_systems_greenhouse,"Hi,
+
+**Why do I see an error in Greenhouse prompting me to publish the selected HackerRank Test before inviting candidates?**",High confidence match in corpus.,product_issue
+escalated,general,"I am sorry, this is out of scope from my capabilities.",Escalated due to sensitive/risk keywords.,product_issue
+escalated,hackerrank_community_subscriptions_payments_and_billing,"I am sorry, this is out of scope from my capabilities.",Escalated due to sensitive/risk keywords.,bug
+replied,hackerrank_community_subscriptions_payments_and_billing,"Hi,
+
+**Can I update my payment method?**",High confidence match in corpus.,bug
+replied,hackerrank_community_additional_resources_job_search_and_applications,"Hi,
+
+HackerRank QuickApply is a free browser extension that simplifies the job application process by automatically filling application forms using information from your HackerRank profile.",High confidence match in corpus.,product_issue
+replied,hackerrank_community_practice_coding_challenges,"Hi,
+
+**Why do I not see my challenge results?**",High confidence match in corpus.,bug
+replied,screen_best_practice_guides,"Hi,
+
+- Before taking the test LIVE, ensure that none of the test questions are leaked. If any questions have been leaked, it is recommended to remove and replace the leaked question within any test before inviting a candidate.",High confidence match in corpus.,bug
+replied,integrations_applicant_tracking_systems_teamtailor,"Hi,
+
+#### I am unable to invite candidates to take a HackerRank test what is the problem?",High confidence match in corpus.,bug
+replied,settings_insights,"Hi,
+
+|  |  |
+|----|----|
+| **Field** | **Description** |
+| User ID | Unique identifier for the user. |
+| Full Name | Full name of the user. |
+| Email | Email address of the user. |
+| Is Email Activated | Indicates if the user’s email is activated. |
+| Company ID (User) | Unique identifier for the company the user belongs to. |
+| User Role | Role of the user in the system (For example, interviewer, recruiter, company admin). |
+| Is Company Admin | Indicates if the user is a company administrator. |
+| Last Sign-In At | Date and time when the user last signed in. |
+| Sign-In Count | Total number of times the user has signed in. |
+| Last Active At | Date and time when the user was last active. |
+| Admin Teams Count | Total number of teams where the user has admin rights. |
+| Locked At | Date and time when the account was locked. |
+| User Created At | Date and time when the user account was created. |
+| User Updated At | Date and time when the user account was last updated. |
+| Created At | Date and time when the user account was created. |
+| Department | Department the user belongs to. |
+| Teams | Teams associated with the user. |",High confidence match in corpus.,product_issue
+replied,interviews_manage_interviews,"Hi,
+
+- If no other interviewers are present, the candidate moves to the lobby, and the interview ends automatically after an hour of inactivity.",High confidence match in corpus.,product_issue
+replied,connectors_pre_built_connectors,"Hi,
+
+#### I’m trying to add Claude in Slack but it’s not working – help!",High confidence match in corpus.,bug
+replied,integrations_scheduling,"Hi,
+
+Whenever an interviewer logs in, we will record their name and update the Interview with their details. This will also happen for multiple interviewers.",High confidence match in corpus.,product_issue
+replied,settings_user_account_settings_and_preferences,"Hi,
+
+- **Initiate Pause Subscription**",High confidence match in corpus.,product_issue
+replied,claude_features_and_capabilities,"Hi,
+
+#### Claude stopped working on my task",High confidence match in corpus.,bug
+escalated,general,"I am sorry, this is out of scope from my capabilities.",Escalated due to sensitive/risk keywords.,product_issue
+replied,hackerrank_community_additional_resources_job_search_and_applications,"Hi,
+
+## Creating a resume with Resume Builder",High confidence match in corpus.,product_issue
+replied,hackerrank_community_certifications,"Hi,
+
+**Can I update the name on my certificate?**",High confidence match in corpus.,product_issue
+replied,general,"Hi,
+
+To dispute a charge, please contact your issuer or bank using the freephone number (only free when dialling from within the USA) located on the front or back of your Visa card. In many cases, your issuer or bank will require detailed information regarding the transaction before resolving the disputed charge.",High confidence match in corpus.,product_issue
+escalated,safeguards,"I am sorry, this is out of scope from my capabilities.",Escalated due to sensitive/risk keywords.,bug
+replied,claude_in_chrome,"Hi,
+
+## Claude can't access a website",High confidence match in corpus.,product_issue
+replied,general,"Hi,
+
+### What do I need to know before I travel abroad?",High confidence match in corpus.,product_issue
+replied,claude_for_education,"Hi,
+
+- [Is my data used for model training?](https://privacy.anthropic.com/en/articles/7996868-is-my-data-used-for-model-training)
+- [How long do you store my organization’s data?](https://privacy.anthropic.com/en/articles/7996866-how-long-do-you-store-my-organization-s-data)
+- [Can you delete data that I sent via Claude?](https://privacy.anthropic.com/en/articles/9796617-can-you-delete-data-that-i-sent-via-claude-for-work-team-enterprise-plans)
+- [How can I delete or rename a conversation?](https://privacy.anthropic.com/en/articles/11117329-how-can-i-delete-or-rename-a-conversation)
+- [Who owns and manages the data of my university account?](https://privacy.anthropic.com/en/articles/9265372-who-owns-and-manages-the-data-of-my-team)",High confidence match in corpus.,product_issue
+replied,library_additional_resources_project_questions,"Hi,
+
+The following files are marked read-only. You cannot edit these files in the editor; however, it is possible from the terminal. You must not modify or delete these files because doing so results in a zero score.",High confidence match in corpus.,product_issue
+escalated,support_consumer,"I am sorry, this is out of scope from my capabilities.",Escalated due to sensitive/risk keywords.,product_issue
+replied,team_and_enterprise_plans_capabilities,"Hi,
+
+- Searching across many large data sources takes time
+- Network connectivity issues
+- High load on connected services",High confidence match in corpus.,bug
+replied,skillup_getting_started,"Hi,
+
+The employee platform is segregated into three tabs:",High confidence match in corpus.,product_issue
+replied,claude_for_education,"Hi,
+
+1. In Canvas, sign in as an administrator and navigate to **Admin -> Developer Keys**.
+2. Click ""+ Developer Key"" then ""+ LTI Key.""
+3. Enter the following:
+  1. **Key Name:** Claude LTI
+  2. **Description:** Enter a short description for the Canva LTI 1.3 app
+  3. **Redirect URIs:** [https://claude.ai/lti/launch](https://claude.ai/lti/launch)
+  4. **Title: **Claude LTI
+  5. **Target Link URI:** [https://claude.ai/lti/launch](https://claude.ai/lti/launch)
+  6. **OpenID Connect Initiation Url:** [https://claude.ai/api/lti/login](https://claude.ai/api/lti/login)
+  7. **JWK method:** [https://claude.ai/api/lti/keys](https://claude.ai/api/lti/keys)
+4. Under **Additional Settings**, toggle Privacy Level to **Public**.
+5. Under **Placements**, we recommend removing the defaults and adding ""Course Navigation"" and ""Assignment Edit"" as the options.
+6. Click ""Save.""
+7. Toggle the state to **On**.",High confidence match in corpus.,product_issue
+replied,general,"Hi,
+
+In general, a merchant is not permitted to establish a minimum or maximum amount for a Visa transaction. However, exceptions apply in the USA and US territories – like Puerto Rico, the US Virgin Islands and Guam. In those locations, and only for credit cards, a merchant may require a minimum transaction amount of US\$10. If you encounter an issue where a merchant has refused to accept your Visa card on the basis that the merchant requires a minimum or maximum amount on a Visa debit card, or requires that the purchase amount on a credit card is greater than US\$10, please notify your Visa card issuer.",High confidence match in corpus.,product_issue
