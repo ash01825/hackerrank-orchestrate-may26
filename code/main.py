@@ -13,7 +13,7 @@ from validation import evidence_validator
 from decision import decision_engine
 from utils.schema_validator import OutputRow
 
-def run_pipeline(input_csv, output_csv):
+def run_pipeline(input_csv, output_csv, n_sample=None):
     print("Loading data and building index...")
     retriever = hybrid.get_retriever()
     print("Hybrid index ready.")
@@ -21,6 +21,11 @@ def run_pipeline(input_csv, output_csv):
     df = pd.read_csv(input_csv)
     col_map = {c: c.lower() for c in df.columns}
     df = df.rename(columns=col_map)
+    
+    if n_sample and n_sample < len(df):
+        df = df.sample(n=n_sample, random_state=42).reset_index(drop=True)
+        print(f"Sampled {n_sample} random tickets from {input_csv}")
+    
     total = len(df)
     print(f"Loaded {total} tickets. Starting pipeline...\n")
     
@@ -58,13 +63,24 @@ def run_pipeline(input_csv, output_csv):
                 prod_area = top_chunks[0].get("section_path", "general")
             else:
                 prod_area = "general"
+                # No retrieval + no hard risk = polite deflection reply (not escalation)
+                if not has_risk:
+                    out_row = {
+                        "issue": issue, "subject": subject, "company": company,
+                        "response": "Thank you for reaching out. Your question doesn't appear to be related to our support topics. If you have a product-related question, please provide more details and we'll be happy to help.",
+                        "product_area": "general", "status": "replied",
+                        "request_type": "invalid", "justification": "No matching evidence. Replied with generic deflection."
+                    }
+                    output_rows.append(out_row)
+                    log.write(f"Ticket {i} -> Status: replied (deflection) | Score: 0.00 | Val: 0.0\n")
+                    continue
             
             # 4. LLM Evidence Validation & Drafting
             print(f"  [4/5] Validating evidence (LLM)...")
             validation_result = evidence_validator.validate_and_compose(full_text, top_chunks)
             
             # 5. Decision Engine
-            print(f"  [5/5] Decision...")
+            print(f"  [5/5] Decision... (val_ans={validation_result.get('answerable','?')} conf={validation_result.get('confidence','?')} hybrid={top_chunks[0].get('hybrid_score', 0.0) if top_chunks else 0.0:.2f})")
             top_score = top_chunks[0].get("hybrid_score", 0.0) if top_chunks else 0.0
             status, just = decision_engine.decide_status(has_risk, validation_result, top_score)
             print(f"  ✅ Done → status={status} | product_area={prod_area} | request_type={req_type}\n")
@@ -110,8 +126,15 @@ if __name__ == "__main__":
     TICKETS_CSV = os.path.join(BASE_DIR, "support_tickets", "support_tickets.csv")
     SAMPLE_TICKETS_CSV = os.path.join(BASE_DIR, "support_tickets", "sample_support_tickets.csv")
     OUTPUT_CSV = os.path.join(BASE_DIR, "support_tickets", "output.csv")
-    
-    if len(sys.argv) > 1 and sys.argv[1] == "test":
-        run_pipeline(SAMPLE_TICKETS_CSV, OUTPUT_CSV)
+
+    args = sys.argv[1:]
+    n_sample = None
+
+    if "--sample" in args:
+        idx = args.index("--sample")
+        n_sample = int(args[idx + 1])
+
+    if "test" in args:
+        run_pipeline(SAMPLE_TICKETS_CSV, OUTPUT_CSV, n_sample=None)
     else:
-        run_pipeline(TICKETS_CSV, OUTPUT_CSV)
+        run_pipeline(TICKETS_CSV, OUTPUT_CSV, n_sample=n_sample)
