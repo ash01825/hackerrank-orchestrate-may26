@@ -10,6 +10,7 @@ from config.enums import INPUT_COLUMNS, OUTPUT_COLUMNS
 from retrieval import hybrid
 from classification import risk_classifier, intent_classifier
 from validation import evidence_validator
+from validation.evidence_validator import compose_response
 from decision import decision_engine
 from utils.schema_validator import OutputRow
 
@@ -46,7 +47,22 @@ def run_pipeline(input_csv, output_csv, n_sample=None):
             
             # 2. LLM Classification
             print(f"  [2/5] LLM classifying intent...")
-            req_type = intent_classifier.classify_ticket(full_text)
+            intent_res = intent_classifier.classify_ticket(full_text)
+            req_type = intent_res.get("request_type", "product_issue")
+            is_emergency = intent_res.get("is_emergency", False)
+            
+            if is_emergency:
+                output_rows.append({
+                    "issue": issue,
+                    "subject": subject,
+                    "company": company,
+                    "status": enums.Status.ESCALATED,
+                    "response": "This appears to be a critical system issue. Escalating to human support immediately.",
+                    "product_area": "general",
+                    "request_type": req_type,
+                    "justification": "LLM detected emergency/outage condition."
+                })
+                continue
             
             # 3. Hybrid Retrieval
             print(f"  [3/5] Retrieving relevant docs...")
@@ -56,18 +72,25 @@ def run_pipeline(input_csv, output_csv, n_sample=None):
                 "Visa": "Visa"
             }
             ecosystem = eco_map.get(company, "unknown")
-            top_chunks = retriever.retrieve(full_text, ecosystem)
+            top_chunks = retriever.retrieve(full_text, ecosystem, top_k=5)
             
             # Set product_area from the top chunk's directory path to avoid LLM hallucination
             if top_chunks:
                 prod_area = top_chunks[0].get("section_path", "general")
             else:
                 prod_area = "general"
-                # No retrieval + no hard risk = polite deflection reply (not escalation)
+                # No retrieval + no hard risk
                 if not has_risk:
+                    # Check if it's just a short pleasantry
+                    text_lower = issue.lower().strip()
+                    if len(text_lower.split()) < 10 and any(p in text_lower for p in ["thank you", "thanks", "great", "awesome"]):
+                        resp_text = "Happy to help! Let me know if you need anything else."
+                    else:
+                        resp_text = "Thank you for reaching out. Your question doesn't appear to be related to our support topics. If you have a product-related question, please provide more details and we'll be happy to help."
+                        
                     out_row = {
                         "issue": issue, "subject": subject, "company": company,
-                        "response": "Thank you for reaching out. Your question doesn't appear to be related to our support topics. If you have a product-related question, please provide more details and we'll be happy to help.",
+                        "response": resp_text,
                         "product_area": "general", "status": "replied",
                         "request_type": "invalid", "justification": "No matching evidence. Replied with generic deflection."
                     }
@@ -85,11 +108,17 @@ def run_pipeline(input_csv, output_csv, n_sample=None):
             status, just = decision_engine.decide_status(has_risk, validation_result, top_score)
             print(f"  ✅ Done → status={status} | product_area={prod_area} | request_type={req_type}\n")
             
-            # 6. Responder
+            # 6. Build response
             if status == "replied":
-                resp = validation_result.get("response", "")
+                resp = validation_result.get("response") or ""
+                resp = resp.strip()
+                # If validator returned empty response (said answerable=no but retrieval was strong),
+                # fall back to direct generation from top chunk
+                if not resp and top_chunks:
+                    print(f"  [+] Validator gave no response — composing directly from top chunk...")
+                    resp = compose_response(full_text, top_chunks)
                 if not resp:
-                    resp = "I am sorry, this is out of scope from my capabilities."
+                    resp = "Thank you for reaching out. Please contact our support team for further assistance."
             else:
                 resp = "I am sorry, this is out of scope from my capabilities."
                 

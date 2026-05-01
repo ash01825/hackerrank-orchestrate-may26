@@ -1,116 +1,24 @@
-status,product_area,response,justification,request_type
-replied,identity_management_sso_jit_scim,"Hi,
+issue,subject,company,response,product_area,status,request_type,justification
+I notice that people I assigned the test in October of 2025 have not received new tests. How long do the tests stay active in the system.,Test Active in the system,HackerRank,"I am unable to provide a specific duration for how long tests stay active, as the active period is determined by the expiry date you define for the test invitation. Please check the expiration settings for your October 2025 tests to ensure they have not already expired.",screen/managing-tests,replied,product_issue,Retrieved with score 0.66.
+site is down & none of the pages are accessible,nan,nan,This appears to be a critical system issue. Escalating to human support immediately.,general,escalated,product_issue,LLM detected emergency/outage condition.
+"I'm noticing that you all have many default versions of roles. (e.g. front end developer for react, angular, vue.js, etc.) What do you consider best practice 
+for when to create a new test versus create a variant of the test? What are the advantages and disadvantages of using variants?","When should I create a variant versus
+ have a different test?",HackerRank,"You should create a test variant when you want a single assessment to adapt to different candidate profiles, such as those with different tech stacks (e.g., Node.js, Python, or Java) or specific roles and skills. The primary advantage of using variants is increased efficiency, as it eliminates the need to manage multiple separate tests while ensuring candidates are evaluated on the most relevant content based on their input at login.",general-help/release-notes,replied,product_issue,Retrieved with score 0.73.
+"Hi there
 
-#### I lost Admin/Owner access after enabling group mappings",High confidence match in corpus.,product_issue
-replied,integrations_applicant_tracking_systems_greenhouse,"Hi,
+We have sent a candidate a Hackerrank assessment already, but we have been informed that they require extra time. As the assessment is 105 minutes, they need an extra 50% extra time added (so around 53 minutes) in addition.
 
-**Why do I see an error in Greenhouse prompting me to publish the selected HackerRank Test before inviting candidates?**",High confidence match in corpus.,product_issue
-escalated,general,"I am sorry, this is out of scope from my capabilities.",Escalated due to sensitive/risk keywords.,product_issue
-escalated,hackerrank_community_subscriptions_payments_and_billing,"I am sorry, this is out of scope from my capabilities.",Escalated due to sensitive/risk keywords.,bug
-replied,hackerrank_community_subscriptions_payments_and_billing,"Hi,
+Please can you provide step-by-step instruction on how we are to reinvite them.
 
-**Can I update my payment method?**",High confidence match in corpus.,bug
-replied,hackerrank_community_additional_resources_job_search_and_applications,"Hi,
+Do we find their profile in 'Candidates' , put in Add time 53 minutes and then click 'reinvite' and send the email? The email to the candidate says 105 minutes as the duration though still so not sure how we can check?
 
-HackerRank QuickApply is a free browser extension that simplifies the job application process by automatically filling application forms using information from your HackerRank profile.",High confidence match in corpus.,product_issue
-replied,hackerrank_community_practice_coding_challenges,"Hi,
-
-**Why do I not see my challenge results?**",High confidence match in corpus.,bug
-replied,screen_best_practice_guides,"Hi,
-
-- Before taking the test LIVE, ensure that none of the test questions are leaked. If any questions have been leaked, it is recommended to remove and replace the leaked question within any test before inviting a candidate.",High confidence match in corpus.,bug
-replied,integrations_applicant_tracking_systems_teamtailor,"Hi,
-
-#### I am unable to invite candidates to take a HackerRank test what is the problem?",High confidence match in corpus.,bug
-replied,settings_insights,"Hi,
-
-|  |  |
-|----|----|
-| **Field** | **Description** |
-| User ID | Unique identifier for the user. |
-| Full Name | Full name of the user. |
-| Email | Email address of the user. |
-| Is Email Activated | Indicates if the user’s email is activated. |
-| Company ID (User) | Unique identifier for the company the user belongs to. |
-| User Role | Role of the user in the system (For example, interviewer, recruiter, company admin). |
-| Is Company Admin | Indicates if the user is a company administrator. |
-| Last Sign-In At | Date and time when the user last signed in. |
-| Sign-In Count | Total number of times the user has signed in. |
-| Last Active At | Date and time when the user was last active. |
-| Admin Teams Count | Total number of teams where the user has admin rights. |
-| Locked At | Date and time when the account was locked. |
-| User Created At | Date and time when the user account was created. |
-| User Updated At | Date and time when the user account was last updated. |
-| Created At | Date and time when the user account was created. |
-| Department | Department the user belongs to. |
-| Teams | Teams associated with the user. |",High confidence match in corpus.,product_issue
-replied,interviews_manage_interviews,"Hi,
-
-- If no other interviewers are present, the candidate moves to the lobby, and the interview ends automatically after an hour of inactivity.",High confidence match in corpus.,product_issue
-replied,connectors_pre_built_connectors,"Hi,
-
-#### I’m trying to add Claude in Slack but it’s not working – help!",High confidence match in corpus.,bug
-replied,integrations_scheduling,"Hi,
-
-Whenever an interviewer logs in, we will record their name and update the Interview with their details. This will also happen for multiple interviewers.",High confidence match in corpus.,product_issue
-replied,settings_user_account_settings_and_preferences,"Hi,
-
-- **Initiate Pause Subscription**",High confidence match in corpus.,product_issue
-replied,claude_features_and_capabilities,"Hi,
-
-#### Claude stopped working on my task",High confidence match in corpus.,bug
-escalated,general,"I am sorry, this is out of scope from my capabilities.",Escalated due to sensitive/risk keywords.,product_issue
-replied,hackerrank_community_additional_resources_job_search_and_applications,"Hi,
-
-## Creating a resume with Resume Builder",High confidence match in corpus.,product_issue
-replied,hackerrank_community_certifications,"Hi,
-
-**Can I update the name on my certificate?**",High confidence match in corpus.,product_issue
-replied,general,"Hi,
-
-To dispute a charge, please contact your issuer or bank using the freephone number (only free when dialling from within the USA) located on the front or back of your Visa card. In many cases, your issuer or bank will require detailed information regarding the transaction before resolving the disputed charge.",High confidence match in corpus.,product_issue
-escalated,safeguards,"I am sorry, this is out of scope from my capabilities.",Escalated due to sensitive/risk keywords.,bug
-replied,claude_in_chrome,"Hi,
-
-## Claude can't access a website",High confidence match in corpus.,product_issue
-replied,general,"Hi,
-
-### What do I need to know before I travel abroad?",High confidence match in corpus.,product_issue
-replied,claude_for_education,"Hi,
-
-- [Is my data used for model training?](https://privacy.anthropic.com/en/articles/7996868-is-my-data-used-for-model-training)
-- [How long do you store my organization’s data?](https://privacy.anthropic.com/en/articles/7996866-how-long-do-you-store-my-organization-s-data)
-- [Can you delete data that I sent via Claude?](https://privacy.anthropic.com/en/articles/9796617-can-you-delete-data-that-i-sent-via-claude-for-work-team-enterprise-plans)
-- [How can I delete or rename a conversation?](https://privacy.anthropic.com/en/articles/11117329-how-can-i-delete-or-rename-a-conversation)
-- [Who owns and manages the data of my university account?](https://privacy.anthropic.com/en/articles/9265372-who-owns-and-manages-the-data-of-my-team)",High confidence match in corpus.,product_issue
-replied,library_additional_resources_project_questions,"Hi,
-
-The following files are marked read-only. You cannot edit these files in the editor; however, it is possible from the terminal. You must not modify or delete these files because doing so results in a zero score.",High confidence match in corpus.,product_issue
-escalated,support_consumer,"I am sorry, this is out of scope from my capabilities.",Escalated due to sensitive/risk keywords.,product_issue
-replied,team_and_enterprise_plans_capabilities,"Hi,
-
-- Searching across many large data sources takes time
-- Network connectivity issues
-- High load on connected services",High confidence match in corpus.,bug
-replied,skillup_getting_started,"Hi,
-
-The employee platform is segregated into three tabs:",High confidence match in corpus.,product_issue
-replied,claude_for_education,"Hi,
-
-1. In Canvas, sign in as an administrator and navigate to **Admin -> Developer Keys**.
-2. Click ""+ Developer Key"" then ""+ LTI Key.""
-3. Enter the following:
-  1. **Key Name:** Claude LTI
-  2. **Description:** Enter a short description for the Canva LTI 1.3 app
-  3. **Redirect URIs:** [https://claude.ai/lti/launch](https://claude.ai/lti/launch)
-  4. **Title: **Claude LTI
-  5. **Target Link URI:** [https://claude.ai/lti/launch](https://claude.ai/lti/launch)
-  6. **OpenID Connect Initiation Url:** [https://claude.ai/api/lti/login](https://claude.ai/api/lti/login)
-  7. **JWK method:** [https://claude.ai/api/lti/keys](https://claude.ai/api/lti/keys)
-4. Under **Additional Settings**, toggle Privacy Level to **Public**.
-5. Under **Placements**, we recommend removing the defaults and adding ""Course Navigation"" and ""Assignment Edit"" as the options.
-6. Click ""Save.""
-7. Toggle the state to **On**.",High confidence match in corpus.,product_issue
-replied,general,"Hi,
-
-In general, a merchant is not permitted to establish a minimum or maximum amount for a Visa transaction. However, exceptions apply in the USA and US territories – like Puerto Rico, the US Virgin Islands and Guam. In those locations, and only for credit cards, a merchant may require a minimum transaction amount of US\$10. If you encounter an issue where a merchant has refused to accept your Visa card on the basis that the merchant requires a minimum or maximum amount on a Visa debit card, or requires that the purchase amount on a credit card is greater than US\$10, please notify your Visa card issuer.",High confidence match in corpus.,product_issue
+Thanks","How to reinvite candidate to Hackerrank 
+assessment and add extra time",HackerRank,"To provide a candidate with extra time, you should use the HR_ACCOMMODATION field. This field requires a percentage value rather than a specific number of minutes. To add 50% extra time to the assessment, enter '50' into the HR_ACCOMMODATION field for that candidate. Once this is updated, you can reinvite the candidate to trigger the updated assessment settings.",integrations/applicant-tracking-systems/jobvite,replied,product_issue,Retrieved with score 0.74.
+"i signed up using google login on hackerrank community , so i do not have a separate hackerrank password. please delete my account
+",nan,HackerRank,"To delete your account when you signed up using a third-party provider like Google, you must first set a password for your HackerRank account. Please follow the password reset process to create a password, which will then allow you to proceed with the account deletion.",hackerrank_community/account-settings/manage-account,replied,product_issue,Retrieved with score 0.77.
+"One of my claude conversations has some private info, i forgot to make a temporary chat, is there anything
+ else that can be done? like delete etc?",nan,Claude,"I'm sorry, but I don't have information on how to delete specific conversations or remove private information from an existing chat. I recommend checking your account settings or the help center for options regarding chat deletion.",claude/account-management,replied,product_issue,Retrieved with score 0.73.
+What is the name of the actor in Iron Man?,"Urgent, please help",None ,"Thank you for reaching out. Your question doesn't appear to be related to our support topics. If you have a product-related question, please provide more details and we'll be happy to help.",general,replied,invalid,No matching evidence. Replied with generic deflection.
+I bought Visa Traveller's Cheques from Citicorp and they were stolen in Lisbon last night. What do I do?,nan,Visa,"You should immediately call Citicorp, the issuing bank, to report the theft. Additionally, you should notify the local police in Lisbon. To expedite the process, have the following information ready: the cheque serial numbers, the date and location of purchase, and the details of when and how the cheques were stolen.",support/consumer,replied,product_issue,Retrieved with score 0.66.
+Where can I report a lost or stolen Visa card from India?,Card stolen,Visa,You can report a lost or stolen Visa card by calling Visa at 000-800-100-1219 or by visiting the Lost or Stolen card support page.,general,replied,product_issue,Retrieved with score 0.85.
+Thank you for helping me,nan,nan,Happy to help! Let me know if you need anything else.,general,replied,invalid,No matching evidence. Replied with generic deflection.
