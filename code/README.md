@@ -105,6 +105,8 @@ code/
 │   ├── bm25.py                     # lexical index
 │   ├── embeddings.py               # MiniLM model + embedding cache
 │   └── hybrid.py                   # lexical/semantic rank fusion
+├── tools/
+│   └── audit_submission.py         # deterministic submission preflight
 ├── utils/
 │   ├── llm_client.py               # OpenRouter client
 │   └── schema_validator.py         # Pydantic output validation
@@ -200,6 +202,14 @@ python code/main.py test
 
 Sample mode writes to the same `support_tickets/output.csv` path. If sample mode is used during checking, run the default command again before submission.
 
+Run the submission audit:
+
+```bash
+python code/tools/audit_submission.py
+```
+
+The audit is deterministic and does not call the model. It checks row count, required columns, allowed enum values, blank fields, generic responses, and risk signals that deserve a final review before upload.
+
 ## Runtime Behavior
 
 The first run initializes the retrieval stack and prepares local embedding cache files. Later runs reuse the cached corpus embeddings and only embed incoming queries at runtime.
@@ -238,5 +248,5 @@ Confirm:
 - It has one output row per input ticket.
 - `status` contains only `replied` or `escalated`.
 - `request_type` contains only `product_issue`, `feature_request`, `bug`, or `invalid`.
+- `python code/tools/audit_submission.py` passes.
 - The code zip excludes `.env`, caches, virtual environments, `__pycache__`, and debug logs.
-
