@@ -15,8 +15,6 @@ if api_key:
 else:
     client = None
 
-# How many seconds to wait between LLM calls (proactive rate limit prevention)
-# 20 RPM limit = 1 call per 3s. We use 4s to be safe.
 CALL_DELAY = float(os.getenv("LLM_CALL_DELAY", "4"))
 
 @retry(
@@ -32,6 +30,7 @@ def call_llm_with_retry(messages, response_format, temperature):
         "messages": messages,
         "temperature": temperature,
         "max_tokens": 512,
+        "seed": 42,
     }
 
     if response_format:

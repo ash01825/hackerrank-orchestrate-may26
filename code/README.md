@@ -105,6 +105,8 @@ code/
 │   ├── bm25.py                     # lexical index
 │   ├── embeddings.py               # MiniLM model + embedding cache
 │   └── hybrid.py                   # lexical/semantic rank fusion
+├── tools/
+│   └── audit_submission.py         # deterministic submission preflight
 ├── utils/
 │   ├── llm_client.py               # OpenRouter client
 │   └── schema_validator.py         # Pydantic output validation
@@ -141,6 +143,14 @@ Safety routing is handled in two layers:
 - `intent_classifier.py` detects true emergency/outage claims and classifies the request type.
 
 The final decision uses both retrieval confidence and safety signals. Supported tickets get a direct response. Risky or unsupported tickets are escalated. Harmless out-of-scope messages get a short deflection instead of a fabricated policy.
+
+## Determinism & Reproducibility
+
+To meet the strict determinism requirements of the evaluation criteria, the agent enforces consistency across runs:
+
+- **Seeded Sampling:** The OpenRouter LLM client (`utils/llm_client.py`) is explicitly locked to `temperature=0.0` and `seed=42`. This ensures that identical prompts evaluate to identical tokens, removing random LLM variance from the final predictions.
+- **Pinned Dependencies:** All packages are strictly version-pinned in `requirements.txt`.
+- **Pre-flight Audit:** The `tools/audit_submission.py` script deterministically enforces CSV schema validity and enum constraints before submission.
 
 ## Model Configuration
 
@@ -200,6 +210,14 @@ python code/main.py test
 
 Sample mode writes to the same `support_tickets/output.csv` path. If sample mode is used during checking, run the default command again before submission.
 
+Run the submission audit:
+
+```bash
+python code/tools/audit_submission.py
+```
+
+The audit is deterministic and does not call the model. It checks row count, required columns, allowed enum values, blank fields, generic responses, and risk signals that deserve a final review before upload.
+
 ## Runtime Behavior
 
 The first run initializes the retrieval stack and prepares local embedding cache files. Later runs reuse the cached corpus embeddings and only embed incoming queries at runtime.
@@ -238,5 +256,5 @@ Confirm:
 - It has one output row per input ticket.
 - `status` contains only `replied` or `escalated`.
 - `request_type` contains only `product_issue`, `feature_request`, `bug`, or `invalid`.
+- `python code/tools/audit_submission.py` passes.
 - The code zip excludes `.env`, caches, virtual environments, `__pycache__`, and debug logs.
-
