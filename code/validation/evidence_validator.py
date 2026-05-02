@@ -13,7 +13,7 @@ Read the user query and the provided documentation chunks.
 1. Determine if the documents contain enough information to safely answer the query (or if the answer can be logically inferred from the documents). (yes/no)
 2. Assign a confidence score from 0.0 to 1.0.
 3. If answerable=yes, extract the most relevant quote as 'evidence_span'.
-4. Generate a direct, professional response. Synthesize the information into a cohesive answer without overly conversational filler (do not over-apologize). Do not mention "the documentation" or "the excerpt".
+4. Generate a detailed, professional response. If the documentation provides a broader solution that achieves the user's intent (e.g., deleting an entire conversation to remove private info), you MUST provide that solution. If the documentation contains step-by-step instructions, preserve the numbered list or bullet points. Synthesize the concepts into a cohesive answer, but do not omit important steps or details. Do not use overly conversational filler. Do not mention "the documentation" or "the excerpt".
 5. Provide a 1-sentence reasoning for your decision.
 
 Output JSON strictly with keys: 'answerable', 'confidence', 'evidence_span', 'response', 'reasoning'."""},
@@ -37,8 +37,10 @@ def compose_response(query, chunks):
     messages = [
         {"role": "system", "content": """You are a direct, professional support agent. 
 Answer the user's question by synthesizing the provided documentation excerpts.
-Provide the answer clearly and concisely without overly apologetic or conversational filler.
-Do not just copy-paste; connect the concepts and draw logical conclusions based on the text. 
+Provide a detailed answer. If the documentation provides a broader solution that achieves the user's intent (e.g., deleting an entire conversation to remove private info), you MUST provide that solution.
+If the excerpts contain step-by-step instructions, preserve the numbered list or bullet points.
+Do not just copy-paste blindly, but ensure no important steps or details are omitted.
+Do not use overly apologetic or conversational filler.
 Never say "according to the documentation".
 If the excerpts do not contain enough information to deduce the answer, politely say you couldn't find the answer."""},
         {"role": "user", "content": f"Customer query: {query}\n\nDocumentation excerpt:\n{top_text}\n\nAnswer:"}

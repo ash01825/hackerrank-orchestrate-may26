@@ -42,11 +42,11 @@ def call_llm_with_retry(messages, response_format, temperature):
 
     if response_format:
         try:
-            return json.loads(content)
+            return json.loads(content, strict=False)
         except json.JSONDecodeError:
             # Strip markdown code fences if model wraps JSON in them
             clean = content.replace("```json", "").replace("```", "").strip()
-            return json.loads(clean)
+            return json.loads(clean, strict=False)
 
     return content
 

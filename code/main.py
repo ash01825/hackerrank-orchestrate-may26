@@ -5,165 +5,124 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from config import enums
-from config.enums import INPUT_COLUMNS, OUTPUT_COLUMNS
+from config.enums import INPUT_COLUMNS, OUTPUT_COLUMNS, Status
 from retrieval import hybrid
 from classification import risk_classifier, intent_classifier
-from validation import evidence_validator
-from validation.evidence_validator import compose_response
+from validation.evidence_validator import validate_and_compose, compose_response
 from decision import decision_engine
 from utils.schema_validator import OutputRow
 
-def run_pipeline(input_csv, output_csv, n_sample=None):
+COMPANY_TO_ECOSYSTEM = {
+    "HackerRank": "HackerRank",
+    "Claude": "Claude",
+    "Visa": "Visa",
+}
+
+PLEASANTRY_WORDS = {"thank you", "thanks", "great", "awesome"}
+
+def _deflect(issue, subject, company, friendly=False):
+    if friendly:
+        response = "Happy to help! Let me know if you need anything else."
+    else:
+        response = "Thank you for reaching out. Your question doesn't appear to be related to our support topics. If you have a product-related question, please provide more details and we'll be happy to help."
+    return {
+        "issue": issue, "subject": subject, "company": company,
+        "response": response, "product_area": "general",
+        "status": "replied", "request_type": "invalid",
+        "justification": "No matching evidence. Replied with generic deflection.",
+    }
+
+def _escalate(issue, subject, company, request_type, reason, response=None):
+    return {
+        "issue": issue, "subject": subject, "company": company,
+        "response": response or "I am sorry, this is out of scope from my capabilities.",
+        "product_area": "general", "status": "escalated",
+        "request_type": request_type, "justification": reason,
+    }
+
+def process_ticket(retriever, issue, subject, company):
+    full_text = f"{subject}\n{issue}".strip()
+
+    has_risk, _ = risk_classifier.hard_risk_scan(full_text)
+
+    intent = intent_classifier.classify_ticket(full_text)
+    req_type = intent.get("request_type", "product_issue")
+    is_emergency = intent.get("is_emergency", False)
+    search_query = intent.get("search_query", full_text)
+
+    if is_emergency:
+        return _escalate(issue, subject, company, req_type,
+                         "LLM detected emergency/outage condition.",
+                         "This appears to be a critical system issue. Escalating to human support immediately.")
+
+    ecosystem = COMPANY_TO_ECOSYSTEM.get(company, "unknown")
+    combined_query = f"{full_text}\n{search_query}"
+    chunks = retriever.retrieve(combined_query, ecosystem, top_k=5)
+
+    if not chunks:
+        if not has_risk:
+            text_lower = issue.lower()
+            is_pleasantry = len(text_lower.split()) < 10 and any(p in text_lower for p in PLEASANTRY_WORDS)
+            return _deflect(issue, subject, company, friendly=is_pleasantry)
+
+    prod_area = chunks[0].get("section_path", "general") if chunks else "general"
+    top_score = chunks[0].get("hybrid_score", 0.0) if chunks else 0.0
+
+    validation = validate_and_compose(full_text, chunks)
+    status, justification = decision_engine.decide_status(has_risk, validation, top_score)
+
+    if status == Status.REPLIED.value:
+        response = (validation.get("response") or "").strip()
+        if not response and chunks:
+            response = compose_response(full_text, chunks)
+        if not response:
+            response = "Thank you for reaching out. Please contact our support team for further assistance."
+    else:
+        response = "I am sorry, this is out of scope from my capabilities."
+
+    try:
+        row = OutputRow(
+            issue=issue, subject=subject, company=company,
+            response=response, product_area=prod_area,
+            status=status, request_type=req_type, justification=justification,
+        )
+        return row.model_dump()
+    except Exception as e:
+        return _escalate(issue, subject, company, "product_issue", f"Schema error: {e}")
+
+
+def run_pipeline(input_csv, output_csv, use_sample=False):
     print("Loading data and building index...")
     retriever = hybrid.get_retriever()
-    print("Hybrid index ready.")
-    
-    df = pd.read_csv(input_csv)
-    col_map = {c: c.lower() for c in df.columns}
-    df = df.rename(columns=col_map)
-    
-    if n_sample and n_sample < len(df):
-        df = df.sample(n=n_sample, random_state=42).reset_index(drop=True)
-        print(f"Sampled {n_sample} random tickets from {input_csv}")
-    
-    total = len(df)
-    print(f"Loaded {total} tickets. Starting pipeline...\n")
-    
-    output_rows = []
-    
-    with open("pipeline_debug.log", "a") as log:
-        for i, row in df.iterrows():
-            issue = str(row.get("issue", ""))
-            subject = str(row.get("subject", ""))
-            company = str(row.get("company", ""))
-            
-            full_text = f"{subject}\n{issue}"
-            print(f"[{i+1}/{total}] Ticket: {subject[:50]!r}")
-            
-            # 1. Hard Risks
-            print(f"  [1/5] Risk scan...")
-            has_risk, kw = risk_classifier.hard_risk_scan(full_text)
-            
-            # 2. LLM Classification
-            print(f"  [2/5] LLM classifying intent...")
-            intent_res = intent_classifier.classify_ticket(full_text)
-            req_type = intent_res.get("request_type", "product_issue")
-            is_emergency = intent_res.get("is_emergency", False)
-            
-            if is_emergency:
-                output_rows.append({
-                    "issue": issue,
-                    "subject": subject,
-                    "company": company,
-                    "status": enums.Status.ESCALATED,
-                    "response": "This appears to be a critical system issue. Escalating to human support immediately.",
-                    "product_area": "general",
-                    "request_type": req_type,
-                    "justification": "LLM detected emergency/outage condition."
-                })
-                continue
-            
-            # 3. Hybrid Retrieval
-            print(f"  [3/5] Retrieving relevant docs...")
-            eco_map = {
-                "HackerRank": "HackerRank",
-                "Claude": "Claude",
-                "Visa": "Visa"
-            }
-            ecosystem = eco_map.get(company, "unknown")
-            top_chunks = retriever.retrieve(full_text, ecosystem, top_k=5)
-            
-            # Set product_area from the top chunk's directory path to avoid LLM hallucination
-            if top_chunks:
-                prod_area = top_chunks[0].get("section_path", "general")
-            else:
-                prod_area = "general"
-                # No retrieval + no hard risk
-                if not has_risk:
-                    # Check if it's just a short pleasantry
-                    text_lower = issue.lower().strip()
-                    if len(text_lower.split()) < 10 and any(p in text_lower for p in ["thank you", "thanks", "great", "awesome"]):
-                        resp_text = "Happy to help! Let me know if you need anything else."
-                    else:
-                        resp_text = "Thank you for reaching out. Your question doesn't appear to be related to our support topics. If you have a product-related question, please provide more details and we'll be happy to help."
-                        
-                    out_row = {
-                        "issue": issue, "subject": subject, "company": company,
-                        "response": resp_text,
-                        "product_area": "general", "status": "replied",
-                        "request_type": "invalid", "justification": "No matching evidence. Replied with generic deflection."
-                    }
-                    output_rows.append(out_row)
-                    log.write(f"Ticket {i} -> Status: replied (deflection) | Score: 0.00 | Val: 0.0\n")
-                    continue
-            
-            # 4. LLM Evidence Validation & Drafting
-            print(f"  [4/5] Validating evidence (LLM)...")
-            validation_result = evidence_validator.validate_and_compose(full_text, top_chunks)
-            
-            # 5. Decision Engine
-            print(f"  [5/5] Decision... (val_ans={validation_result.get('answerable','?')} conf={validation_result.get('confidence','?')} hybrid={top_chunks[0].get('hybrid_score', 0.0) if top_chunks else 0.0:.2f})")
-            top_score = top_chunks[0].get("hybrid_score", 0.0) if top_chunks else 0.0
-            status, just = decision_engine.decide_status(has_risk, validation_result, top_score)
-            print(f"  ✅ Done → status={status} | product_area={prod_area} | request_type={req_type}\n")
-            
-            # 6. Build response
-            if status == "replied":
-                resp = validation_result.get("response") or ""
-                resp = resp.strip()
-                # If validator returned empty response (said answerable=no but retrieval was strong),
-                # fall back to direct generation from top chunk
-                if not resp and top_chunks:
-                    print(f"  [+] Validator gave no response — composing directly from top chunk...")
-                    resp = compose_response(full_text, top_chunks)
-                if not resp:
-                    resp = "Thank you for reaching out. Please contact our support team for further assistance."
-            else:
-                resp = "I am sorry, this is out of scope from my capabilities."
-                
-            # 7. Validate
-            try:
-                out_row = OutputRow(
-                    issue=issue,
-                    subject=subject,
-                    company=company,
-                    response=resp,
-                    product_area=prod_area,
-                    status=status,
-                    request_type=req_type,
-                    justification=just
-                )
-                output_rows.append(out_row.model_dump())
-            except Exception as e:
-                # Fallback on strict enum fail
-                output_rows.append({
-                    "issue": issue, "subject": subject, "company": company,
-                    "response": "I am sorry, this is out of scope from my capabilities.",
-                    "product_area": "general", "status": "escalated",
-                    "request_type": "product_issue", "justification": f"Schema error: {e}"
-                })
-            
-            log.write(f"Ticket {i} -> Status: {status} | Score: {top_score:.2f} | Val: {validation_result.get('confidence', 0.0)}\n")
+    print("Index ready.\n")
 
-    out_df = pd.DataFrame(output_rows, columns=OUTPUT_COLUMNS)
+    df = pd.read_csv(input_csv)
+    df = df.rename(columns={c: c.lower() for c in df.columns})
+    total = len(df)
+    print(f"Loaded {total} tickets.\n")
+
+    results = []
+    for i, row in df.iterrows():
+        issue = "" if pd.isna(row.get("issue")) else str(row["issue"]).strip()
+        subject = "" if pd.isna(row.get("subject")) else str(row["subject"]).strip()
+        company = "" if pd.isna(row.get("company")) else str(row["company"]).strip()
+
+        print(f"[{i+1}/{total}] {subject[:60]!r}")
+        result = process_ticket(retriever, issue, subject, company)
+        results.append(result)
+        print(f"  → status={result['status']} | area={result['product_area']}\n")
+
+    out_df = pd.DataFrame(results, columns=OUTPUT_COLUMNS)
     out_df.to_csv(output_csv, index=False)
-    print(f"Pipeline finished. Output written to {output_csv}")
+    print(f"Done. Output → {output_csv}")
+
 
 if __name__ == "__main__":
-    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    TICKETS_CSV = os.path.join(BASE_DIR, "support_tickets", "support_tickets.csv")
-    SAMPLE_TICKETS_CSV = os.path.join(BASE_DIR, "support_tickets", "sample_support_tickets.csv")
-    OUTPUT_CSV = os.path.join(BASE_DIR, "support_tickets", "output.csv")
+    base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    tickets_csv = os.path.join(base, "support_tickets", "support_tickets.csv")
+    sample_csv = os.path.join(base, "support_tickets", "sample_support_tickets.csv")
+    output_csv = os.path.join(base, "support_tickets", "output.csv")
 
-    args = sys.argv[1:]
-    n_sample = None
-
-    if "--sample" in args:
-        idx = args.index("--sample")
-        n_sample = int(args[idx + 1])
-
-    if "test" in args:
-        run_pipeline(SAMPLE_TICKETS_CSV, OUTPUT_CSV, n_sample=None)
-    else:
-        run_pipeline(TICKETS_CSV, OUTPUT_CSV, n_sample=n_sample)
+    use_sample = "test" in sys.argv
+    input_csv = sample_csv if use_sample else tickets_csv
+    run_pipeline(input_csv, output_csv)
