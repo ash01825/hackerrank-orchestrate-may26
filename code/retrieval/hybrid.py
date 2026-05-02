@@ -10,7 +10,7 @@ class HybridRetriever:
         for eco, data in self.idx.ecosystem_indices.items():
             texts = [c["text"] for c in data["chunks"]]
             if texts:
-                self.doc_embeddings[eco] = embeddings.embed_texts(texts)
+                self.doc_embeddings[eco] = embeddings.embed_texts_cached(texts, eco.lower())
 
     def retrieve(self, query, ecosystem, top_k=5):
         if ecosystem not in self.doc_embeddings:

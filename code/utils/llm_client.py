@@ -7,7 +7,7 @@ from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_excep
 
 load_dotenv()
 
-api_key = os.getenv("OPENROUTER_API_KEY") or os.getenv("OPENAI_API_KEY")
+api_key = os.getenv("OPENROUTER_API_KEY")
 base_url = "https://openrouter.ai/api/v1"
 
 if api_key:
@@ -52,7 +52,7 @@ def call_llm_with_retry(messages, response_format, temperature):
 
 def call_llm(messages, response_format=None, temperature=0.0):
     if not client:
-        print("LLM Error: No API key found.")
+        print("LLM Error: OPENROUTER_API_KEY is not set.")
         return None
 
     time.sleep(CALL_DELAY)  # proactive throttle before every call
