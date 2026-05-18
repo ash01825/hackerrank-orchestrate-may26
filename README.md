@@ -1,134 +1,260 @@
-# HackerRank Orchestrate
+# Orchestrate Support Triage Agent
 
-Starter repository for the **HackerRank Orchestrate** 24-hour hackathon (May 1–2, 2026).
+Command-line support triage for the HackerRank Orchestrate challenge.
 
-Build a terminal-based AI agent that triages real support tickets across three product ecosystems; **HackerRank**, **Claude**, and **Visa** — using only the support corpus shipped in this repo.
+The program reads the evaluator's ticket file, searches the provided support corpus, decides whether each case should be answered or escalated, and writes the completed predictions CSV. It is built for the challenge workflow: run one terminal command, produce `support_tickets/output.csv`, submit the result.
 
-Read [`problem_statement.md`](./problem_statement.md) for the full task spec, input/output schema, and allowed values, and [`evalutation_criteria.md`](./evalutation_criteria.md) for how submissions are scored.
+## Evaluation Contract
 
----
+Expected repository shape:
 
-## Contents
-
-1. [Repository layout](#repository-layout)
-2. [What you need to build](#what-you-need-to-build)
-3. [Where your code goes](#where-your-code-goes)
-4. [Quickstart](#quickstart)
-5. [Chat transcript logging](#chat-transcript-logging)
-6. [Submission](#submission)
-7. [Judge interview](#judge-interview)
-8. [Evaluation criteria](#evaluation-criteria)
-
----
-
-## Repository layout
-
-```
+```text
 .
-├── AGENTS.md                       # Rules for AI coding tools + transcript logging
-├── problem_statement.md            # Full task description and I/O schema
-├── README.md                       # You are here
-├── code/                           # ← Build your agent here
-│   └── main.py                     #   Entry point (rename/extend as you like)
-├── data/                           # Local-only support corpus (no network needed)
-│   ├── hackerrank/                 #   HackerRank help center
-│   ├── claude/                     #   Claude Help Center export
-│   └── visa/                       #   Visa consumer + small-business support
+├── code/
+├── data/
+│   ├── claude/
+│   ├── hackerrank/
+│   └── visa/
 └── support_tickets/
-    ├── sample_support_tickets.csv  # Inputs + expected outputs (for development)
-    ├── support_tickets.csv         # Inputs only (run your agent on these)
-    └── output.csv                  # Write your agent's predictions here
+    └── support_tickets.csv
 ```
 
----
-
-## What you need to build
-
-A terminal-based agent that, for each row in `support_tickets/support_tickets.csv`, produces:
-
-| Column         | Allowed values                                          |
-| -------------- | ------------------------------------------------------- |
-| `status`       | `replied`, `escalated`                                  |
-| `product_area` | most relevant support category / domain area            |
-| `response`     | user-facing answer grounded in the provided corpus      |
-| `justification`| concise explanation of the routing/answering decision   |
-| `request_type` | `product_issue`, `feature_request`, `bug`, `invalid`    |
-
-Hard requirements (from `problem_statement.md`):
-
-- Must be **terminal-based**.
-- Must use **only the provided support corpus** (no live web calls for ground-truth answers).
-- Must **escalate** high-risk, sensitive, or unsupported cases instead of guessing.
-- Must avoid hallucinated policies or unsupported claims.
-
-Beyond that you are free to bring your own approach — RAG, vector DBs, tool use, structured output, agent frameworks, classical ML, or anything else.
-
----
-
-## Where your code goes
-
-All of your work belongs in [`code/`](./code/). The repo ships with an empty `code/main.py` you can grow into your full agent — add more modules (`agent.py`, `retriever.py`, `classifier.py`, etc.) next to it as needed.
-
-Conventions:
-
-- Put a **README inside `code/`** describing how to install dependencies and run your agent.
-- Read secrets **from environment variables only** (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, …). Copy `.env.example` → `.env` (already gitignored) if you keep one. **Never hardcode keys.**
-- Be **deterministic** where possible. Seed any random sampling.
-- Write responses to `support_tickets/output.csv`.
-
----
-
-## Quickstart
-
-Clone this repository:
+Run from the repository root:
 
 ```bash
-git clone git@github.com:interviewstreet/hackerrank-orchestrate-may26.git
-cd hackerrank-orchestrate-may26
+python code/main.py
 ```
 
-You are free to use any language or runtime. We recommend **Python**, **JavaScript**, or **TypeScript**.
+The agent reads:
 
----
+```text
+support_tickets/support_tickets.csv
+```
 
-## Chat transcript logging
+and writes:
 
-This repo ships with an `AGENTS.md` that any modern AI coding tool (Cursor, Claude Code, Codex, Gemini CLI, Copilot, etc.) will read. It instructs the tool to append every conversation turn to a single shared log file:
+```text
+support_tickets/output.csv
+```
 
-| Platform       | Path                                              |
-| -------------- | ------------------------------------------------- |
-| macOS / Linux  | `$HOME/hackerrank_orchestrate/log.txt`            |
-| Windows        | `%USERPROFILE%\hackerrank_orchestrate\log.txt`    |
+That output contains the original ticket fields plus the five required prediction fields:
 
-You don't need to do anything to enable it — just use your AI tool normally. You'll upload this `log.txt` as your chat transcript at submission time.
+```text
+issue,subject,company,response,product_area,status,request_type,justification
+```
 
----
+## What The Agent Handles
 
-## Submission
+The ticket set spans HackerRank, Claude, and Visa support. The messages are not clean FAQ prompts; they include blank subjects, mixed wording, urgent requests, irrelevant questions, account and billing pressure, security-sensitive cases, and product-specific issues.
 
-Submit on the HackerRank Community Platform:
-<https://www.hackerrank.com/contests/hackerrank-orchestrate-may26/challenges/support-agent/submission>
+The agent is designed to do five things reliably:
 
-You will upload **three** files:
+1. classify the request,
+2. retrieve matching corpus evidence,
+3. decide whether the ticket is safe to answer,
+4. produce a grounded support response,
+5. write a schema-valid CSV row.
 
-1. **Code zip** — zip your `code/` directory and upload it. Exclude virtualenvs, `node_modules`, build artifacts, the `data/` corpus, and the `support_tickets/` CSVs.
-2. **Predictions CSV** — your agent's output for `support_tickets/support_tickets.csv` (i.e. the populated `output.csv`).
-3. **Chat transcript** — the `log.txt` from the path in [Chat transcript logging](#chat-transcript-logging).
+Allowed output values are enforced before writing:
 
----
+```text
+status: replied | escalated
+request_type: product_issue | feature_request | bug | invalid
+```
 
-## Judge interview
+## Architecture
 
-After a successful submission, your AI Judge interview will happen within a few hours after the hackathon ends. It will stay open for the next 4 hours. 
+```text
+CSV ticket
+   |
+   v
+intent classifier  ----> request_type, emergency flag, retrieval query
+   |
+   v
+risk scanner       ----> deterministic sensitive-case signal
+   |
+   v
+hybrid retriever   ----> BM25 + MiniLM over local support docs
+   |
+   v
+evidence validator ----> answerability + grounded response
+   |
+   v
+decision engine    ----> replied / escalated
+   |
+   v
+Pydantic schema    ----> output.csv row
+```
 
-The AI Judge will have access to your submission and may ask about your approach, decisions, and how you used AI while building your solution. The interview will be 30 minutes long, and keeping your camera on is mandatory.
+## Code Layout
 
-Results will be announced on May 15, 2026
+```text
+code/
+├── main.py                         # entrypoint and CSV orchestration
+├── requirements.txt
+├── classification/
+│   ├── intent_classifier.py        # request type, emergency flag, retrieval query
+│   └── risk_classifier.py          # deterministic high-risk keyword scan
+├── config/
+│   └── enums.py                    # paths, enums, allowed values
+├── decision/
+│   └── decision_engine.py          # reply/escalate decision
+├── ingestion/
+│   └── loader.py                   # corpus loading and chunking
+├── retrieval/
+│   ├── bm25.py                     # lexical index
+│   ├── embeddings.py               # MiniLM model + embedding cache
+│   └── hybrid.py                   # lexical/semantic rank fusion
+├── tools/
+│   └── audit_submission.py         # deterministic submission preflight
+├── utils/
+│   ├── llm_client.py               # OpenRouter client
+│   └── schema_validator.py         # Pydantic output validation
+└── validation/
+    └── evidence_validator.py       # evidence check and response drafting
+```
 
----
+## Retrieval
 
-## Evaluation criteria
+The corpus is loaded from the local `data/` directory. Each document chunk keeps its ecosystem, source document, section path, and text.
 
-Submissions are scored across four dimensions: agent design (your `code/`), the AI Judge interview, output accuracy on `support_tickets/output.csv`, and AI fluency from your chat transcript.
+Retrieval is scoped by ecosystem when the company is known. A Claude ticket searches Claude docs, a Visa ticket searches Visa docs, and a HackerRank ticket searches HackerRank docs.
 
-See [`evalutation_criteria.md`](./evalutation_criteria.md) for the full rubric.
+Ranking combines two signals:
+
+- BM25 for exact support terms and product language.
+- MiniLM embeddings for semantic matches when the ticket uses different wording.
+
+The hybrid score is:
+
+```text
+0.5 * normalized_bm25 + 0.5 * cosine_similarity
+```
+
+Corpus embeddings are cached under `data/embeddings/` after they are computed. That keeps repeated evaluation runs fast without adding model files or generated artifacts to the submitted `code/` directory.
+
+## Safety And Grounding
+
+The agent does not answer directly from model memory. It retrieves corpus evidence first, validates whether the evidence can support an answer, and only then drafts a response.
+
+Safety routing is handled in two layers:
+
+- `risk_classifier.py` catches sensitive language such as fraud, unauthorized access, account compromise, payment failure, legal/GDPR, and related risk terms.
+- `intent_classifier.py` detects true emergency/outage claims and classifies the request type.
+
+The final decision uses both retrieval confidence and safety signals. Supported tickets get a direct response. Risky or unsupported tickets are escalated. Harmless out-of-scope messages get a short deflection instead of a fabricated policy.
+
+## Determinism & Reproducibility
+
+To meet the strict determinism requirements of the evaluation criteria, the agent enforces consistency across runs:
+
+- **Seeded Sampling:** The OpenRouter LLM client (`utils/llm_client.py`) is explicitly locked to `temperature=0.0` and `seed=42`. This ensures that identical prompts evaluate to identical tokens, removing random LLM variance from the final predictions.
+- **Pinned Dependencies:** All packages are strictly version-pinned in `requirements.txt`.
+- **Pre-flight Audit:** The `tools/audit_submission.py` script deterministically enforces CSV schema validity and enum constraints before submission.
+
+## Model Configuration
+
+The LLM client sends requests through OpenRouter.
+
+Required:
+
+```bash
+export OPENROUTER_API_KEY="your_openrouter_key"
+```
+
+Optional:
+
+```bash
+export LLM_MODEL="google/gemma-4-31b-it:free"
+export LLM_CALL_DELAY="4"
+```
+
+`LLM_MODEL` can be changed without touching code. `LLM_CALL_DELAY` controls the pause before model calls, which is useful when running through low-rate-limit endpoints.
+
+## Setup
+
+Install dependencies from the repository root:
+
+```bash
+python -m pip install -r code/requirements.txt
+```
+
+Dependencies are intentionally standard Python packages:
+
+```text
+pandas
+rank-bm25
+sentence-transformers
+openai
+python-dotenv
+pydantic
+tenacity
+numpy
+```
+
+The `openai` package is used only as an SDK for OpenRouter's compatible chat-completions API. The code requires `OPENROUTER_API_KEY`.
+
+## Run
+
+Generate the final predictions:
+
+```bash
+python code/main.py
+```
+
+Run the sample file:
+
+```bash
+python code/main.py test
+```
+
+Sample mode writes to the same `support_tickets/output.csv` path. If sample mode is used during checking, run the default command again before submission.
+
+Run the submission audit:
+
+```bash
+python code/tools/audit_submission.py
+```
+
+The audit is deterministic and does not call the model. It checks row count, required columns, allowed enum values, blank fields, generic responses, and risk signals that deserve a final review before upload.
+
+## Runtime Behavior
+
+The first run initializes the retrieval stack and prepares local embedding cache files. Later runs reuse the cached corpus embeddings and only embed incoming queries at runtime.
+
+LLM calls are still the main runtime cost because the agent performs structured classification and evidence validation for each ticket. That is intentional: the model is used where judgment is needed, while retrieval and validation keep the response grounded in the provided corpus.
+
+For faster runs on a higher-throughput OpenRouter model/account, reduce the call delay:
+
+```bash
+export LLM_CALL_DELAY="1"
+python code/main.py
+```
+
+## Validation Snapshot
+
+On the provided sample ticket set, the agent matched the explicit categorical labels:
+
+| Field | Result |
+| --- | --- |
+| `status` | 10 / 10 |
+| `request_type` | 10 / 10 |
+
+The architecture also produces the remaining judged fields: product area, response, and justification.
+
+## Submission Check
+
+Before uploading:
+
+```bash
+python code/main.py
+```
+
+Confirm:
+
+- `support_tickets/output.csv` exists.
+- It has one output row per input ticket.
+- `status` contains only `replied` or `escalated`.
+- `request_type` contains only `product_issue`, `feature_request`, `bug`, or `invalid`.
+- `python code/tools/audit_submission.py` passes.
+- The code zip excludes `.env`, caches, virtual environments, `__pycache__`, and debug logs.
